@@ -33,7 +33,6 @@ import '../../l10n/app_localizations.dart';
 import '../../widgets/video_call/video_call_button.dart';
 import '../../models/video_call_model.dart';
 import '../../config/routes.dart';
-import '../../providers/video_call_provider.dart';
 
 class ChatScreen extends StatefulWidget {
   final String channelId;
@@ -1385,96 +1384,8 @@ class _ChatScreenState extends State<ChatScreen> {
     // Collect user IDs from new messages
     final userIds = <String>{};
     for (final wkMsg in newWkMsgs) {
-      // Quick RTC INVITE detection to auto-open incoming call screen
-      try {
-        final content = wkMsg.content;
-        if (content.startsWith('__RTC_INVITE__|')) {
-          final jsonText = content.substring('__RTC_INVITE__|'.length);
-          final data = jsonDecode(jsonText) as Map<String, dynamic>;
-          final fromUid = wkMsg.fromUID;
-          // Only act on invites sent by others
-          if (fromUid != _currentUserId) {
-            final callerId = (data['callerId'] ?? '') as String;
-            final callerName = (data['callerName'] ?? 'Unknown') as String;
-            final callerAvatar = data['callerAvatar'] as String?;
-            final participants =
-                (data['participants'] as List?)
-                    ?.map((e) => e.toString())
-                    .toList() ??
-                <String>[];
-            final callTypeText = (data['callType'] ?? 'p2p') as String;
-            final callType = callTypeText == 'group'
-                ? VideoCallType.group
-                : VideoCallType.p2p;
-
-            // Navigate to incoming call screen
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              AppRoutes.navigateToVideoCall(
-                context,
-                channelId: widget.channelId,
-                callerId: callerId,
-                callerName: callerName,
-                callerAvatar: callerAvatar,
-                participants: participants,
-                callType: callType,
-                isIncoming: true,
-              );
-            });
-          }
-        }
-        // Handle RTC OFFER
-        else if (content.startsWith('__RTC_OFFER__|')) {
-          final jsonText = content.substring('__RTC_OFFER__|'.length);
-          final data = jsonDecode(jsonText) as Map<String, dynamic>;
-          final sdp = (data['sdp'] ?? '') as String;
-          final type = (data['type'] ?? 'offer') as String;
-          if (sdp.isNotEmpty) {
-            // Delegate to VideoCallProvider/Service
-            final provider = Provider.of<VideoCallProvider>(
-              context,
-              listen: false,
-            );
-            await provider.initialize();
-            await provider.acceptCall();
-            await provider.videoCallService.handleRemoteOffer(sdp, type);
-          }
-        }
-        // Handle RTC ANSWER
-        else if (content.startsWith('__RTC_ANSWER__|')) {
-          final jsonText = content.substring('__RTC_ANSWER__|'.length);
-          final data = jsonDecode(jsonText) as Map<String, dynamic>;
-          final sdp = (data['sdp'] ?? '') as String;
-          final type = (data['type'] ?? 'answer') as String;
-          if (sdp.isNotEmpty) {
-            final provider = Provider.of<VideoCallProvider>(
-              context,
-              listen: false,
-            );
-            await provider.initialize();
-            await provider.videoCallService.handleRemoteAnswer(sdp, type);
-          }
-        }
-        // Handle RTC ICE
-        else if (content.startsWith('__RTC_ICE__|')) {
-          final jsonText = content.substring('__RTC_ICE__|'.length);
-          final data = jsonDecode(jsonText) as Map<String, dynamic>;
-          final candidate = (data['candidate'] ?? '') as String;
-          final sdpMid = data['sdpMid'] as String?;
-          final sdpMLineIndex = (data['sdpMLineIndex'] as num?)?.toInt();
-          if (candidate.isNotEmpty) {
-            final provider = Provider.of<VideoCallProvider>(
-              context,
-              listen: false,
-            );
-            await provider.initialize();
-            await provider.videoCallService.handleRemoteIce(
-              candidate,
-              sdpMid,
-              sdpMLineIndex,
-            );
-          }
-        }
-      } catch (_) {}
+      // Tắt xử lý RTC trong ChatScreen để tránh đúp với listener toàn cục
+      try {} catch (_) {}
       if (wkMsg.fromUID != _currentUserId) {
         userIds.add(wkMsg.fromUID);
       }

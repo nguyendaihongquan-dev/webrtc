@@ -28,8 +28,9 @@ class RtcSignalingService {
           final content = msg.content;
           final isInvite = content.startsWith('__RTC_INVITE__|');
           final isOffer = content.startsWith('__RTC_OFFER__|');
+          final isAnswer = content.startsWith('__RTC_ANSWER__|');
           final isIce = content.startsWith('__RTC_ICE__|');
-          if (!isInvite && !isOffer && !isIce) continue;
+          if (!isInvite && !isOffer && !isAnswer && !isIce) continue;
 
           // For testing across same UID on two devices, do not ignore self messages here
           // final uid = await _getCurrentUid();
@@ -71,7 +72,7 @@ class RtcSignalingService {
             callType: callType,
           );
 
-          // Handle OFFER/ICE immediately (even if UI not yet opened)
+          // Handle OFFER/ANSWER/ICE immediately (even if UI not yet opened)
           if (isOffer) {
             final String jsonText = content.substring('__RTC_OFFER__|'.length);
             final offerData = jsonDecode(jsonText) as Map<String, dynamic>;
@@ -80,6 +81,14 @@ class RtcSignalingService {
             if (sdp.isNotEmpty) {
               await videoCallService.acceptCall();
               await videoCallService.handleRemoteOffer(sdp, type);
+            }
+          } else if (isAnswer) {
+            final String jsonText = content.substring('__RTC_ANSWER__|'.length);
+            final ansData = jsonDecode(jsonText) as Map<String, dynamic>;
+            final sdp = (ansData['sdp'] ?? '') as String;
+            final type = (ansData['type'] ?? 'answer') as String;
+            if (sdp.isNotEmpty) {
+              await videoCallService.handleRemoteAnswer(sdp, type);
             }
           } else if (isIce) {
             final String jsonText = content.substring('__RTC_ICE__|'.length);
