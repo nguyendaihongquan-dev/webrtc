@@ -1,0 +1,66 @@
+name: qgim_client_flutter
+description: "A new Flutter project."
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: ^3.8.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+
+  flutter_localizations:
+    sdk: flutter
+  shared_preferences: ^2.5.3
+  intl: ^0.20.2
+  google_fonts: ^6.2.1
+  flutter_staggered_animations: ^1.1.1
+  ionicons: ^0.2.2
+  provider: ^6.1.5
+  http: ^1.2.2
+  dio: ^5.4.0
+  device_info_plus: ^11.1.0
+  wukongimfluttersdk: ^1.6.7
+  qr_flutter: ^4.1.0
+  webview_flutter: ^4.13.0
+  package_info_plus: ^8.3.0
+  wechat_assets_picker: ^9.8.0
+  emoji_picker_flutter: ^4.3.0
+  image_picker: ^1.1.2
+  audio_waveforms: ^1.3.0
+  any_link_preview: ^3.0.3
+  chatview_utils: ^0.0.1
+  cached_network_image: ^3.4.1
+  wechat_camera_picker: ^4.4.0
+  flutter_slidable: ^3.0.1
+  flutter_screenutil: ^5.9.3
+  flutter_mentions: ^2.0.1
+  flutter_typeahead: ^5.2.0
+  flutter_parsed_text: ^2.2.1
+  flutter_cache_manager: ^3.4.1
+  path_provider: ^2.1.5
+  path: ^1.9.0
+  sqflite: ^2.3.0
+  flutter_local_notifications: ^19.4.0
+  vibration: ^2.0.0
+  mobile_scanner: ^7.0.1
+  url_launcher: ^6.3.1
+  ffmpeg_kit_flutter_new: ^3.2.0
+  flutter_webrtc: ^0.9.48
+  permission_handler: ^11.3.1
+  flutter_callkit_incoming: ^2.5.8
+
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  generate: true
+  uses-material-design: true
+  assets:
+    - assets/images/
+
