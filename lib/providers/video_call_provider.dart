@@ -9,6 +9,8 @@ import '../utils/logger.dart';
 class VideoCallProvider extends ChangeNotifier {
   final VideoCallService _videoCallService = VideoCallService();
 
+  VideoCallService get videoCallService => _videoCallService;
+
   // State variables
   VideoCallModel? _currentCall;
   List<CallParticipant> _participants = [];

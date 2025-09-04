@@ -1,9 +1,14 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../models/video_call_model.dart';
 import '../utils/logger.dart';
+import 'package:wukongimfluttersdk/wkim.dart';
+import 'package:wukongimfluttersdk/type/const.dart';
+import 'package:wukongimfluttersdk/model/wk_text_content.dart';
+import 'package:wukongimfluttersdk/entity/channel.dart';
 
 /// Service quản lý video call với WebRTC
 class VideoCallService {
@@ -15,6 +20,7 @@ class VideoCallService {
   RTCPeerConnection? _peerConnection;
   MediaStream? _localStream;
   MediaStream? _remoteStream;
+  final List<RTCIceCandidate> _pendingRemoteCandidates = [];
 
   // Call state
   VideoCallModel? _currentCall;
@@ -104,8 +110,34 @@ class VideoCallService {
       // Tạo peer connection
       await _createPeerConnection(callType);
 
+      // GỬI RTC INVITE (signaling tạm) qua kênh chat để bên kia tự mở UI
+      try {
+        final payload = {
+          'callId': callId,
+          'channelId': channelId,
+          'callerId': callerId,
+          'callerName': callerName,
+          'callerAvatar': callerAvatar,
+          'participants': participants,
+          'callType': callType == VideoCallType.group ? 'group' : 'p2p',
+        };
+
+        // Gửi text message qua WuKong để máy bên kia nhận và tự mở UI
+        final text = '__RTC_INVITE__|${jsonEncode(payload)}';
+        final content = WKTextContent(text);
+        final channelType = callType == VideoCallType.group
+            ? WKChannelType.group
+            : WKChannelType.personal;
+        final channel = WKChannel(channelId, channelType);
+        WKIM.shared.messageManager.sendMessage(content, channel);
+        Logger.service('VideoCallService', 'RTC INVITE sent to $channelId');
+      } catch (_) {}
+
       // Cập nhật state
       _updateCallState(VideoCallState.calling);
+
+      // Tạo offer và gửi đi để bắt đầu đàm phán SDP
+      await _createAndSendOffer(channelId, callType);
 
       Logger.service('VideoCallService', 'Call started successfully');
       return true;
@@ -267,18 +299,26 @@ class VideoCallService {
       final configuration = <String, dynamic>{
         'iceServers': iceServers,
         'iceCandidatePoolSize': 10,
+        // Explicitly use Unified Plan semantics (required on modern Android)
+        'sdpSemantics': 'unified-plan',
       };
 
       _peerConnection = await createPeerConnection(configuration);
 
-      // Add local stream
+      // Add local tracks (Unified Plan: use addTrack instead of addStream)
       if (_localStream != null) {
-        await _peerConnection!.addStream(_localStream!);
+        for (final track in _localStream!.getTracks()) {
+          await _peerConnection!.addTrack(track, _localStream!);
+        }
       }
 
       // Set up event handlers
       _peerConnection!.onIceCandidate = _onIceCandidate;
-      _peerConnection!.onAddStream = _onAddStream;
+      // Unified Plan: listen on onTrack instead of onAddStream
+      _peerConnection!.onTrack = _onTrack;
+      _peerConnection!.onIceGatheringState = (state) {
+        Logger.debug('ICE gathering state: $state');
+      };
       _peerConnection!.onConnectionState = _onConnectionState;
       _peerConnection!.onIceConnectionState = _onIceConnectionState;
 
@@ -296,14 +336,131 @@ class VideoCallService {
   /// Xử lý ICE candidate
   void _onIceCandidate(RTCIceCandidate candidate) {
     Logger.debug('ICE candidate: ${candidate.candidate}');
-    // TODO: Send ICE candidate to remote peer via signaling
+    try {
+      if (_currentCall == null) return;
+      final channelId = _currentCall!.channelId;
+      final callType = _currentCall!.callType;
+      final payload = {
+        'candidate': candidate.candidate,
+        'sdpMid': candidate.sdpMid,
+        'sdpMLineIndex': candidate.sdpMLineIndex,
+      };
+      final text = '__RTC_ICE__|${jsonEncode(payload)}';
+      final content = WKTextContent(text);
+      final channelType = callType == VideoCallType.group
+          ? WKChannelType.group
+          : WKChannelType.personal;
+      final channel = WKChannel(channelId, channelType);
+      WKIM.shared.messageManager.sendMessage(content, channel);
+    } catch (_) {}
   }
 
-  /// Xử lý remote stream
-  void _onAddStream(MediaStream stream) {
-    Logger.service('VideoCallService', 'Remote stream added');
-    _remoteStream = stream;
-    _remoteStreamController.add(stream);
+  /// Unified Plan: nhận remote stream qua onTrack
+  void _onTrack(RTCTrackEvent event) {
+    try {
+      Logger.service('VideoCallService', 'onTrack: kind=${event.track.kind}');
+      final remote = event.streams.isNotEmpty ? event.streams.first : null;
+      if (remote != null) {
+        _remoteStream = remote;
+        _remoteStreamController.add(remote);
+        // Apply any pending remote ICE candidates queued before remote stream available
+        for (final c in _pendingRemoteCandidates) {
+          _peerConnection?.addCandidate(c);
+        }
+        _pendingRemoteCandidates.clear();
+      }
+    } catch (e, st) {
+      Logger.error('onTrack error', error: e, stackTrace: st);
+    }
+  }
+
+  /// Tạo offer, setLocal, gửi qua WuKong
+  Future<void> _createAndSendOffer(
+    String channelId,
+    VideoCallType callType,
+  ) async {
+    try {
+      if (_peerConnection == null) return;
+      final offer = await _peerConnection!.createOffer({
+        'offerToReceiveAudio': 1,
+        'offerToReceiveVideo': 1,
+      });
+      await _peerConnection!.setLocalDescription(offer);
+
+      final payload = {'sdp': offer.sdp, 'type': offer.type};
+      final text = '__RTC_OFFER__|${jsonEncode(payload)}';
+      final content = WKTextContent(text);
+      final channelType = callType == VideoCallType.group
+          ? WKChannelType.group
+          : WKChannelType.personal;
+      final channel = WKChannel(channelId, channelType);
+      WKIM.shared.messageManager.sendMessage(content, channel);
+      Logger.service('VideoCallService', 'RTC OFFER sent');
+    } catch (e, st) {
+      Logger.error('Failed to create/send offer', error: e, stackTrace: st);
+    }
+  }
+
+  /// Xử lý offer nhận được, tạo answer và gửi lại
+  Future<void> handleRemoteOffer(String sdp, String type) async {
+    try {
+      if (_peerConnection == null) return;
+      final desc = RTCSessionDescription(sdp, type);
+      await _peerConnection!.setRemoteDescription(desc);
+      final answer = await _peerConnection!.createAnswer({
+        'offerToReceiveAudio': 1,
+        'offerToReceiveVideo': 1,
+      });
+      await _peerConnection!.setLocalDescription(answer);
+
+      if (_currentCall == null) return;
+      final payload = {'sdp': answer.sdp, 'type': answer.type};
+      final text = '__RTC_ANSWER__|${jsonEncode(payload)}';
+      final content = WKTextContent(text);
+      final channelType = _currentCall!.callType == VideoCallType.group
+          ? WKChannelType.group
+          : WKChannelType.personal;
+      final channel = WKChannel(_currentCall!.channelId, channelType);
+      WKIM.shared.messageManager.sendMessage(content, channel);
+      Logger.service('VideoCallService', 'RTC ANSWER sent');
+    } catch (e, st) {
+      Logger.error(
+        'Failed to handle offer / send answer',
+        error: e,
+        stackTrace: st,
+      );
+    }
+  }
+
+  /// Xử lý answer nhận được
+  Future<void> handleRemoteAnswer(String sdp, String type) async {
+    try {
+      if (_peerConnection == null) return;
+      final desc = RTCSessionDescription(sdp, type);
+      await _peerConnection!.setRemoteDescription(desc);
+      Logger.service('VideoCallService', 'Remote ANSWER set');
+    } catch (e, st) {
+      Logger.error('Failed to handle answer', error: e, stackTrace: st);
+    }
+  }
+
+  /// Xử lý ICE candidate nhận được
+  Future<void> handleRemoteIce(
+    String candidate,
+    String? sdpMid,
+    int? sdpMLineIndex,
+  ) async {
+    try {
+      final ice = RTCIceCandidate(candidate, sdpMid, sdpMLineIndex);
+      if (_peerConnection == null) {
+        _pendingRemoteCandidates.add(ice);
+        return;
+      }
+      await _peerConnection!.addCandidate(ice);
+      Logger.service('VideoCallService', 'Remote ICE added');
+    } catch (e, st) {
+      Logger.error('Failed to handle remote ice', error: e, stackTrace: st);
+    }
   }
 
   /// Xử lý connection state
