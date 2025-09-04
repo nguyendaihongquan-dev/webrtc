@@ -62,6 +62,30 @@ class VideoCallService {
     }
   }
 
+  /// Khởi tạo thông tin cuộc gọi đến (trước khi accept)
+  void beginIncomingCall({
+    required String channelId,
+    required String callerId,
+    required String callerName,
+    String? callerAvatar,
+    required List<String> participants,
+    required VideoCallType callType,
+  }) {
+    _currentCall = VideoCallModel(
+      callId: _generateCallId(),
+      channelId: channelId,
+      callerId: callerId,
+      callerName: callerName,
+      callerAvatar: callerAvatar,
+      participants: participants,
+      callType: callType,
+      callState: VideoCallState.ringing,
+      startTime: DateTime.now(),
+      isIncoming: true,
+    );
+    _callStateController.add(_currentCall!);
+  }
+
   /// Yêu cầu quyền camera và microphone
   Future<bool> _requestPermissions() async {
     try {
