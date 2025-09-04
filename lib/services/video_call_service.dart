@@ -21,7 +21,7 @@ class VideoCallService {
   MediaStream? _localStream;
   MediaStream? _remoteStream;
   final List<RTCIceCandidate> _pendingRemoteCandidates = [];
-  bool _isMakingOffer = false;
+  // bool _isMakingOffer = false; // Reserved for glare handling
 
   // Call state
   VideoCallModel? _currentCall;
@@ -212,6 +212,22 @@ class VideoCallService {
         'Rejecting call ${_currentCall!.callId}',
       );
 
+      // Gửi tín hiệu REJECT cho peer
+      try {
+        final payload = {
+          'callId': _currentCall!.callId,
+          'channelId': _currentCall!.channelId,
+          'reason': 'rejected',
+        };
+        final text = '__RTC_REJECT__|${jsonEncode(payload)}';
+        final content = WKTextContent(text);
+        final channelType = _currentCall!.callType == VideoCallType.group
+            ? WKChannelType.group
+            : WKChannelType.personal;
+        final channel = WKChannel(_currentCall!.channelId, channelType);
+        WKIM.shared.messageManager.sendMessage(content, channel);
+      } catch (_) {}
+
       _updateCallState(VideoCallState.rejected);
       await _cleanup();
     } catch (e, stackTrace) {
@@ -225,6 +241,22 @@ class VideoCallService {
       if (_currentCall == null) return;
 
       Logger.service('VideoCallService', 'Ending call ${_currentCall!.callId}');
+
+      // Gửi tín hiệu END cho peer
+      try {
+        final payload = {
+          'callId': _currentCall!.callId,
+          'channelId': _currentCall!.channelId,
+          'reason': 'ended',
+        };
+        final text = '__RTC_END__|${jsonEncode(payload)}';
+        final content = WKTextContent(text);
+        final channelType = _currentCall!.callType == VideoCallType.group
+            ? WKChannelType.group
+            : WKChannelType.personal;
+        final channel = WKChannel(_currentCall!.channelId, channelType);
+        WKIM.shared.messageManager.sendMessage(content, channel);
+      } catch (_) {}
 
       _updateCallState(VideoCallState.ended);
       await _cleanup();
@@ -282,13 +314,41 @@ class VideoCallService {
       _currentCall = _currentCall!.copyWith(isSpeakerEnabled: enabled);
       _callStateController.add(_currentCall!);
 
-      // TODO: Implement speaker toggle logic
+      // Bật/tắt loa ngoài ở tầng hệ thống (flutter_webrtc)
+      await Helper.setSpeakerphoneOn(enabled);
     } catch (e, stackTrace) {
       Logger.error(
         'Failed to toggle speaker',
         error: e,
         stackTrace: stackTrace,
       );
+    }
+  }
+
+  /// Xử lý khi peer gửi thông báo kết thúc cuộc gọi
+  Future<void> handleRemoteEnd({String? reason}) async {
+    try {
+      if (_currentCall == null) return;
+      Logger.service('VideoCallService', 'Remote ended call: ${reason ?? ''}');
+      _updateCallState(VideoCallState.ended);
+      await _cleanup();
+    } catch (e, st) {
+      Logger.error('Failed to handle remote end', error: e, stackTrace: st);
+    }
+  }
+
+  /// Xử lý khi peer từ chối cuộc gọi
+  Future<void> handleRemoteReject({String? reason}) async {
+    try {
+      if (_currentCall == null) return;
+      Logger.service(
+        'VideoCallService',
+        'Remote rejected call: ${reason ?? ''}',
+      );
+      _updateCallState(VideoCallState.rejected);
+      await _cleanup();
+    } catch (e, st) {
+      Logger.error('Failed to handle remote reject', error: e, stackTrace: st);
     }
   }
 
