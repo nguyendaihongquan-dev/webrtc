@@ -7,12 +7,14 @@ import 'providers/auth_provider.dart';
 import 'providers/chat_provider.dart';
 import 'providers/conversation_provider.dart';
 import 'services/notification_service.dart';
+import 'services/rtc_signaling_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await ModuleGatekeeper.instance.loadFromStorage();
 
   await NotificationService.instance.initialize();
+  await RtcSignalingService.instance.initialize();
   runApp(
     ScreenUtilInit(
       designSize: const Size(375, 812),

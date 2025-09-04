@@ -5,6 +5,7 @@ PODS:
     - Flutter
   - connectivity_plus (0.0.1):
     - Flutter
+  - CryptoSwift (1.8.4)
   - device_info_plus (0.0.1):
     - Flutter
   - emoji_picker_flutter (0.0.1):
@@ -15,10 +16,16 @@ PODS:
   - ffmpeg_kit_flutter_new/full-gpl (1.0.0):
     - Flutter
   - Flutter (1.0.0)
+  - flutter_callkit_incoming (0.0.1):
+    - CryptoSwift
+    - Flutter
   - flutter_keyboard_visibility (0.0.1):
     - Flutter
   - flutter_local_notifications (0.0.1):
     - Flutter
+  - flutter_webrtc (0.9.36):
+    - Flutter
+    - WebRTC-SDK (= 114.5735.08)
   - image_picker_ios (0.0.1):
     - Flutter
   - mobile_scanner (7.0.0):
@@ -29,6 +36,8 @@ PODS:
   - path_provider_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
+  - permission_handler_apple (9.3.0):
+    - Flutter
   - photo_manager (3.7.1):
     - Flutter
     - FlutterMacOS
@@ -49,6 +58,7 @@ PODS:
   - video_player_avfoundation (0.0.1):
     - Flutter
     - FlutterMacOS
+  - WebRTC-SDK (114.5735.08)
   - webview_flutter_wkwebview (0.0.1):
     - Flutter
     - FlutterMacOS
@@ -61,12 +71,15 @@ DEPENDENCIES:
   - emoji_picker_flutter (from `.symlinks/plugins/emoji_picker_flutter/ios`)
   - ffmpeg_kit_flutter_new (from `.symlinks/plugins/ffmpeg_kit_flutter_new/ios`)
   - Flutter (from `Flutter`)
+  - flutter_callkit_incoming (from `.symlinks/plugins/flutter_callkit_incoming/ios`)
   - flutter_keyboard_visibility (from `.symlinks/plugins/flutter_keyboard_visibility/ios`)
   - flutter_local_notifications (from `.symlinks/plugins/flutter_local_notifications/ios`)
+  - flutter_webrtc (from `.symlinks/plugins/flutter_webrtc/ios`)
   - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
   - mobile_scanner (from `.symlinks/plugins/mobile_scanner/darwin`)
   - package_info_plus (from `.symlinks/plugins/package_info_plus/ios`)
   - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
+  - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
   - photo_manager (from `.symlinks/plugins/photo_manager/ios`)
   - pointer_interceptor_ios (from `.symlinks/plugins/pointer_interceptor_ios/ios`)
   - sensors_plus (from `.symlinks/plugins/sensors_plus/ios`)
@@ -76,6 +89,11 @@ DEPENDENCIES:
   - vibration (from `.symlinks/plugins/vibration/ios`)
   - video_player_avfoundation (from `.symlinks/plugins/video_player_avfoundation/darwin`)
   - webview_flutter_wkwebview (from `.symlinks/plugins/webview_flutter_wkwebview/darwin`)
+
+SPEC REPOS:
+  trunk:
+    - CryptoSwift
+    - WebRTC-SDK
 
 EXTERNAL SOURCES:
   audio_waveforms:
@@ -92,10 +110,14 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/ffmpeg_kit_flutter_new/ios"
   Flutter:
     :path: Flutter
+  flutter_callkit_incoming:
+    :path: ".symlinks/plugins/flutter_callkit_incoming/ios"
   flutter_keyboard_visibility:
     :path: ".symlinks/plugins/flutter_keyboard_visibility/ios"
   flutter_local_notifications:
     :path: ".symlinks/plugins/flutter_local_notifications/ios"
+  flutter_webrtc:
+    :path: ".symlinks/plugins/flutter_webrtc/ios"
   image_picker_ios:
     :path: ".symlinks/plugins/image_picker_ios/ios"
   mobile_scanner:
@@ -104,6 +126,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/package_info_plus/ios"
   path_provider_foundation:
     :path: ".symlinks/plugins/path_provider_foundation/darwin"
+  permission_handler_apple:
+    :path: ".symlinks/plugins/permission_handler_apple/ios"
   photo_manager:
     :path: ".symlinks/plugins/photo_manager/ios"
   pointer_interceptor_ios:
@@ -124,29 +148,34 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/webview_flutter_wkwebview/darwin"
 
 SPEC CHECKSUMS:
-  audio_waveforms: a6dde7fe7c0ea05f06ffbdb0f7c1b2b2ba6cedcf
-  camera_avfoundation: be3be85408cd4126f250386828e9b1dfa40ab436
-  connectivity_plus: cb623214f4e1f6ef8fe7403d580fdad517d2f7dd
-  device_info_plus: 21fcca2080fbcd348be798aa36c3e5ed849eefbe
-  emoji_picker_flutter: ece213fc274bdddefb77d502d33080dc54e616cc
-  ffmpeg_kit_flutter_new: 12426a19f10ac81186c67c6ebc4717f8f4364b7f
-  Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
-  flutter_keyboard_visibility: 4625131e43015dbbe759d9b20daaf77e0e3f6619
-  flutter_local_notifications: a5a732f069baa862e728d839dd2ebb904737effb
-  image_picker_ios: 7fe1ff8e34c1790d6fff70a32484959f563a928a
-  mobile_scanner: 9157936403f5a0644ca3779a38ff8404c5434a93
-  package_info_plus: af8e2ca6888548050f16fa2f1938db7b5a5df499
-  path_provider_foundation: 080d55be775b7414fd5a5ef3ac137b97b097e564
-  photo_manager: 1d80ae07a89a67dfbcae95953a1e5a24af7c3e62
-  pointer_interceptor_ios: ec847ef8b0915778bed2b2cef636f4d177fa8eed
-  sensors_plus: 6a11ed0c2e1d0bd0b20b4029d3bad27d96e0c65b
-  shared_preferences_foundation: 9e1978ff2562383bd5676f64ec4e9aa8fa06a6f7
-  sqflite_darwin: 20b2a3a3b70e43edae938624ce550a3cbf66a3d0
-  url_launcher_ios: 694010445543906933d732453a59da0a173ae33d
-  vibration: 8e2f50fc35bb736f9eecb7dd9f7047fbb6a6e888
-  video_player_avfoundation: 2cef49524dd1f16c5300b9cd6efd9611ce03639b
-  webview_flutter_wkwebview: 1821ceac936eba6f7984d89a9f3bcb4dea99ebb2
+  audio_waveforms: cd736909ebc6b6a164eb74701d8c705ce3241e1c
+  camera_avfoundation: adb0207d868b2d873e895371d88448399ab78d87
+  connectivity_plus: 2a701ffec2c0ae28a48cf7540e279787e77c447d
+  CryptoSwift: e64e11850ede528a02a0f3e768cec8e9d92ecb90
+  device_info_plus: bf2e3232933866d73fe290f2942f2156cdd10342
+  emoji_picker_flutter: 8e50ec5caac456a23a78637e02c6293ea0ac8771
+  ffmpeg_kit_flutter_new: 57e1119b327bb2e13a091e0d73576739fb9f22f5
+  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  flutter_callkit_incoming: 417dd1b46541cdd5d855ad795ccbe97d1c18155e
+  flutter_keyboard_visibility: 0339d06371254c3eb25eeb90ba8d17dca8f9c069
+  flutter_local_notifications: ff50f8405aaa0ccdc7dcfb9022ca192e8ad9688f
+  flutter_webrtc: 55df3aaa802114dad390191a46c2c8d535751268
+  image_picker_ios: c560581cceedb403a6ff17f2f816d7fea1421fc1
+  mobile_scanner: 77265f3dc8d580810e91849d4a0811a90467ed5e
+  package_info_plus: c0502532a26c7662a62a356cebe2692ec5fe4ec4
+  path_provider_foundation: 2b6b4c569c0fb62ec74538f866245ac84301af46
+  permission_handler_apple: 9878588469a2b0d0fc1e048d9f43605f92e6cec2
+  photo_manager: 81954a1bf804b6e882d0453b3b6bc7fad7b47d3d
+  pointer_interceptor_ios: 508241697ff0947f853c061945a8b822463947c1
+  sensors_plus: 7229095999f30740798f0eeef5cd120357a8f4f2
+  shared_preferences_foundation: fcdcbc04712aee1108ac7fda236f363274528f78
+  sqflite_darwin: 5a7236e3b501866c1c9befc6771dfd73ffb8702d
+  url_launcher_ios: 5334b05cef931de560670eeae103fd3e431ac3fe
+  vibration: 7d883d141656a1c1a6d8d238616b2042a51a1241
+  video_player_avfoundation: 7c6c11d8470e1675df7397027218274b6d2360b3
+  WebRTC-SDK: c24d2a6c9f571f2ed42297cb8ffba9557093142b
+  webview_flutter_wkwebview: a4af96a051138e28e29f60101d094683b9f82188
 
 PODFILE CHECKSUM: e30f02f9d1c72c47bb6344a0a748c9d268180865
 
-COCOAPODS: 1.16.2
+COCOAPODS: 1.13.0
