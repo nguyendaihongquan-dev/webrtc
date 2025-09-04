@@ -21,6 +21,7 @@ class VideoCallService {
   MediaStream? _localStream;
   MediaStream? _remoteStream;
   final List<RTCIceCandidate> _pendingRemoteCandidates = [];
+  bool _isMakingOffer = false;
 
   // Call state
   VideoCallModel? _currentCall;
@@ -161,6 +162,7 @@ class VideoCallService {
       _updateCallState(VideoCallState.calling);
 
       // Tạo offer và gửi đi để bắt đầu đàm phán SDP
+      Logger.service('VideoCallService', 'Preparing to create and send OFFER');
       await _createAndSendOffer(channelId, callType);
 
       Logger.service('VideoCallService', 'Call started successfully');
